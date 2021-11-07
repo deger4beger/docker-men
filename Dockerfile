@@ -3,5 +3,6 @@ WORKDIR /app
 COPY package.json .
 RUN yarn install
 COPY . ./
-EXPOSE 3030
+ENV PORT 3030
+EXPOSE $PORT
 CMD ["yarn", "dev"]
