@@ -1,13 +1,22 @@
 const express = require("express")
 const mongoose = require("mongoose")
+const { NODE_PORT, PORT, MONGO_IP, MONGO_PORT, MONGO_USER,
+	MONGO_PASSWORD } = require("./config/config")
 
 const app = express()
 
-mongoose
-	.connect("mongodb://degerbeger:mypassword@mongo:27017/?authSource=admin")
-	.then(() => console.log("Mongo is working"))
-	.catch((e) => console.log(e))
+const mongoURL = `mongodb://${MONGO_USER}:${MONGO_PASSWORD}
+	@${MONGO_IP}:${MONGO_PORT}/?authSource=admin`
 
+const connectOrRetry = () => {
+	mongoose
+		.connect(mongoURL)
+		.then(() => console.log("Mongo is working"))
+		.catch((e) => {
+			console.log(e)
+			setTimeout(connectOrRetry, 5000)
+		})
+}
 
 
 app.get("/", (req, res) => {
@@ -15,7 +24,7 @@ app.get("/", (req, res) => {
 })
 
 
-const port = process.env.PORT || 3030
+const port = NODE_PORT
 app.listen(port, () => console.log(`App running on port ${port}`))
 
 
@@ -32,6 +41,7 @@ app.listen(port, () => console.log(`App running on port ${port}`))
 	// docker rm docker-test-cont -f (delete container) (-fv if want to delete volumes as well)
 
 // useful:
+	// help
 	// docker <image|volume|network> ls (list of images)
 	// docker ps (list of containers) <-a> (for all containers, stopped or crashed) (docker-compose ps)
 	// docker <image|volume> prune (delete all dangling/itermediate images (none:none))
