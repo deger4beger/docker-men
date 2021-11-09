@@ -1,6 +1,8 @@
 const express = require("express")
 const mongoose = require("mongoose")
 const morgan = require("morgan")
+const postRouter = require("./routes/post.route")
+const userRouter = require("./routes/user.route")
 const {
 	NODE_PORT,
 	MONGO_IP,
@@ -8,7 +10,6 @@ const {
 	MONGO_USER,
 	MONGO_PASSWORD
 } = require("./config/config")
-const postRouter = require("./routes/post.route")
 
 
 const app = express()
@@ -38,6 +39,7 @@ app.get("/", (req, res) => {
 
 
 app.use("/api/v1/posts", postRouter)
+app.use("/api/v1/user", userRouter)
 
 // Handling errors
 app.use((req, res, next) => {
