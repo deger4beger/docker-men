@@ -1,9 +1,20 @@
 const express = require("express")
 const mongoose = require("mongoose")
-const { NODE_PORT, PORT, MONGO_IP, MONGO_PORT, MONGO_USER,
-	MONGO_PASSWORD } = require("./config/config")
+const morgan = require("morgan")
+const {
+	NODE_PORT,
+	MONGO_IP,
+	MONGO_PORT,
+	MONGO_USER,
+	MONGO_PASSWORD
+} = require("./config/config")
+const postRouter = require("./routes/post.route")
+
 
 const app = express()
+
+app.use(express.json())
+app.use(morgan("dev"))
 
 const mongoURL = `mongodb://${MONGO_USER}:${MONGO_PASSWORD}
 	@${MONGO_IP}:${MONGO_PORT}/?authSource=admin`
@@ -18,14 +29,33 @@ const connectOrRetry = () => {
 		})
 }
 
+connectOrRetry()
+
 
 app.get("/", (req, res) => {
-	return res.send("<h2>Docker hello</h2>")
+	return res.send("<h2>Docker hello !!!</h2>")
 })
 
 
-const port = NODE_PORT
-app.listen(port, () => console.log(`App running on port ${port}`))
+app.use("/api/v1/posts", postRouter)
+
+// Handling errors
+app.use((req, res, next) => {
+	const error = new Error("Not found")
+	error.status = 404
+	next(error)
+})
+
+app.use((error, req, res, next) => {
+	res.status(error.status || 505)
+	res.json({
+		error: {
+			message: error.message
+		}
+	})
+})
+
+app.listen(NODE_PORT, () => console.log(`App running on port ${NODE_PORT}`))
 
 
 
@@ -45,7 +75,7 @@ app.listen(port, () => console.log(`App running on port ${port}`))
 	// docker <image|volume|network> ls (list of images)
 	// docker ps (list of containers) <-a> (for all containers, stopped or crashed) (docker-compose ps)
 	// docker <image|volume> prune (delete all dangling/itermediate images (none:none))
-	// docker logs <name of container>
+	// docker logs <name of container> <-f>
 	// docker <network> inspect <container name>
 	// docker exec -it <name of container> bash (insted of bash(example): mongo -u <user> -p <password>)
 
