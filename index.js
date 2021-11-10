@@ -8,15 +8,41 @@ const {
 	MONGO_IP,
 	MONGO_PORT,
 	MONGO_USER,
-	MONGO_PASSWORD
+	MONGO_PASSWORD,
+	REDIS_URL,
+	REDIS_PORT,
+	REDIS_SECRET
 } = require("./config/config")
-
+const redis = require('redis')
+const session = require('express-session')
+const RedisStore = require('connect-redis')(session)
 
 const app = express()
 
+// Middlewares
+const redisClient = redis.createClient({
+	host: REDIS_URL,
+	port: REDIS_PORT
+})
+
+app.use(
+  	session({
+    	store: new RedisStore({ client: redisClient }),
+    	secret: REDIS_SECRET,
+    	cookie: {
+    		secure: false,
+    		resave: false,
+    		saveUninitialized: false,
+    		httpOnly: true,
+    		maxAge: 3000000
+    	}
+  	})
+)
 app.use(express.json())
 app.use(morgan("dev"))
 
+
+// MongoDB connection
 const mongoURL = `mongodb://${MONGO_USER}:${MONGO_PASSWORD}
 	@${MONGO_IP}:${MONGO_PORT}/?authSource=admin`
 
@@ -32,7 +58,7 @@ const connectOrRetry = () => {
 
 connectOrRetry()
 
-
+// Routes
 app.get("/", (req, res) => {
 	return res.send("<h2>Docker hello !!!</h2>")
 })
@@ -82,12 +108,20 @@ app.listen(NODE_PORT, () => console.log(`App running on port ${NODE_PORT}`))
 	// docker exec -it <name of container> bash (insted of bash(example): mongo -u <user> -p <password>)
 
 	// for bash:
-		// exit (from bash)
-		// ls (list of files in bash)
-		// cat <file name> (show file content)
-		// touch / rm <filename>
-		// printenv
-		// ping <other container>
+		// node:
+			// exit (from bash)
+			// ls (list of files in bash)
+			// cat <file name> (show file content)
+			// touch / rm <filename>
+			// printenv
+			// ping <other container>
+		// mongo:
+			// mongo -u <usname> -p <pw>
+			// show dbs, use <dbname>, show collections, db.coll.<someMethod>
+		// redis:
+			// redis-cli
+			// KEYS *
+			// GET "<key name>"
 	// for compose:
 		// docker-compose up -d (--build)
 		// docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
