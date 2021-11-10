@@ -3,6 +3,7 @@ const mongoose = require("mongoose")
 const morgan = require("morgan")
 const postRouter = require("./routes/post.route")
 const userRouter = require("./routes/user.route")
+const cors = require("cors")
 const {
 	NODE_PORT,
 	MONGO_IP,
@@ -25,6 +26,10 @@ const redisClient = redis.createClient({
 	port: REDIS_PORT
 })
 
+app.enable("trust proxy")
+app.use(express.json())
+app.use(morgan("dev"))
+app.use(cors())
 app.use(
   	session({
     	store: new RedisStore({ client: redisClient }),
@@ -38,8 +43,6 @@ app.use(
     	}
   	})
 )
-app.use(express.json())
-app.use(morgan("dev"))
 
 
 // MongoDB connection
@@ -59,8 +62,9 @@ const connectOrRetry = () => {
 connectOrRetry()
 
 // Routes
-app.get("/", (req, res) => {
-	return res.send("<h2>Docker hello !!!</h2>")
+app.get("/api/v1", (req, res) => {
+	res.send("<h2>Docker hello !!!</h2>")
+	console.log("nginx is balancing")
 })
 
 
@@ -124,5 +128,5 @@ app.listen(NODE_PORT, () => console.log(`App running on port ${NODE_PORT}`))
 			// GET "<key name>"
 	// for compose:
 		// docker-compose up -d (--build)
-		// docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+		// docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build (--scale <cont>=<num>)
 		// docker-compose down -v (volumes down)

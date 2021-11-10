@@ -1,9 +1,13 @@
 version: "3"
 services:
+    nginx:
+        image: nginx:stable-alpine
+        volumes:
+            - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     node-app:
         build: .
-        ports:
-            - 3030:4000
+        # ports:
+        #     - 3030:4000 no need with nginx proxy
         env_file:
             - ./.env
         depends_on:
@@ -16,8 +20,9 @@ services:
             - MONGO_INITDB_ROOT_PASSWORD=mypassword
         volumes:
             - mongo-db:/data/db
-        ports:
-            - 27018:27017
+        # ports:
+        #     - 27018:27017
+        # This is for connection with db manage tools. Remove for security
     redis:
         image: redis
 
